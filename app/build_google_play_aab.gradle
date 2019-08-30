@@ -1,0 +1,81 @@
+
+ext {
+    findAabAndCopy = this.&findAabAndCopy
+}
+
+/**
+ * 查找打包输出的 aab 文件，并拷贝到项目根目录下的 GooglePlayTemp 文件夹
+ *
+ * @return
+ */
+def findAabAndCopy() {
+
+    // 1. 获取 aab 文件输出文件
+    def bundleOutputsFile = new File("${buildFile.getParent()}/build/outputs/bundle")
+
+    printlnInfo("打包出包所在目录：$bundleOutputsFile")
+
+    if (!bundleOutputsFile.exists()) {
+        printlnInfo("打包出包目录不存在")
+        return
+    }
+    def childFiles = bundleOutputsFile.listFiles()
+    if (childFiles == null || childFiles.size() != 1) {
+        printlnInfo("没有找到 aab 包所在根目录")
+        return
+    }
+
+    def aabDirFiles = childFiles[0].listFiles(new FilenameFilter() {
+        @Override
+        boolean accept(File file, String name) {
+            if (name == null || name.isEmpty()) {
+                return false
+            }
+            return name.endsWith("aab")
+        }
+    })
+    if (aabDirFiles == null || aabDirFiles.size() != 1) {
+        printlnInfo("没有找到 aab 文件包")
+        return
+    }
+
+    def sourceAabFilePath = aabDirFiles[0]
+
+    printlnInfo("aab 文件路径：${sourceAabFilePath}")
+
+    def copyAabFileName = "app_${android.defaultConfig.versionName}_${currentTime()}_release.aab"
+
+    // 2. 拷贝 aab 文件到项目根目录下的 GooglePlayAAB 文件夹，并且重命名
+    def googlePlayTempFile = new File("${rootProject.getProjectDir().getAbsolutePath()}/GooglePlayTemp/")
+
+    def copyAabFilePath = new File("${googlePlayTempFile}/${copyAabFileName}")
+
+    if (googlePlayTempFile.exists()) {
+        googlePlayTempFile.deleteDir()
+        printlnInfo("GooglePlayTemp 文件夹存在，删除存在的 GooglePlayTemp 文件夹")
+    }
+
+    copy {
+        from sourceAabFilePath
+        into copyAabFilePath.getParentFile().getAbsolutePath()
+
+        rename {
+            copyAabFileName.replace("*.aab", copyAabFileName)
+        }
+    }
+
+    if (!copyAabFilePath.exists()) {
+        printlnInfo("aab 文件拷贝失败，请检查原因！")
+        return
+    }
+
+    printlnInfo("aab 文件拷贝成功：${copyAabFilePath}")
+}
+
+static def printlnInfo(Object value) {
+    println("[abb 包拷贝处理]：$value")
+}
+
+static def currentTime() {
+    return new Date().format("yyyy.MM.dd_HH:mm", TimeZone.getTimeZone("UTC"))
+}
