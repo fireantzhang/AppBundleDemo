@@ -49,7 +49,7 @@ buildTypes {
 由于 `fir` 目前不支持 AppBundle 格式的应用上传，所以改用 App Bundle 格式发布应用之后，得用手动打包【aab 后缀】 --> 安装验证【使用 [`bundletool`](https://developer.android.com/studio/command-line/bundletool)】 --> 提包，持续一两个版本之后，这种方式极其不便利，每次还比较繁琐，作为一个有梦想有追求的程序猿，是不能容忍这种有损工作效率的事情存在【看来懒惰还真是科技进步的源动力】，于是有了以下流程的改进。
 
 
-前面提到的打包发布流程有些变化，流程将会变成，fir 只用于出包测试【当然最后发版本的时候也会做关闭测试入口的操作】，aab 格式发包需要本地运行 [buildGooglePlayAAB.sh](http://code.wakavideos.com:8081/mius/AudioChat/blob/release/230/buildGooglePlayAAB.sh) 脚本打包 aab 包，这个脚本流程是：
+前面提到的打包发布流程有些变化，流程将会变成，fir 只用于出包测试【当然最后发版本的时候也会做关闭测试入口的操作】，aab 格式发包需要本地运行 [buildGooglePlayAAB.sh](https://github.com/fireantzhang/AppBundleDemo/blob/master/buildGooglePlayAAB.sh) 脚本打包 aab 包，这个脚本流程是：
 
 `打包【由gradle 的 自定义 Task 完成】，并重命名 aab，并拷贝到 项目根目录的 GooglePlayTemp【这个目录不会加入到 git 仓库中】` --> `使用 bundletool 生成 apks 包` --> `安装到连接的手机上，并自动启动应用` --> `最后简单验证一下安装到手机的版本是否正常【比如入口是否已关闭、各项功能是否正常等】，即可将 GooglePlayTemp 文件夹中的 aab 包上传到 GP 后台提审`
 
