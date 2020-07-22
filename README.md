@@ -4,17 +4,17 @@
 
 ### 重大提醒
 
-由于跟 `fir` 的研发负责人沟通后，他们已经从 [fir-cli(2.0.2)](https://github.com/FIRHQ/fir-cli) 开始已经支持 `aab` 格式安装包的上传，所以针对 `aab` 包的流程有了新的方案：`测试阶段把开放测试入口的 aab 包上传到 fir` --> `测试人员通过工具软件进行安装`([软件地址](https://github.com/fireantzhang/AabInstallHelp)) --> `打包关闭切换环境入口的 aab 包` --> `验证无误之后即可从 fir 上下载 aab 包进行提交`
+由于跟 `fir` 的研发负责人沟通后，他们已经从 [fir-cli(2.0.2)](https://github.com/FIRHQ/fir-cli) 开始已经支持 `aab` 格式安装包的上传，所以针对 `aab` 包的流程有了新的方案：`测试阶段把开放测试入口的 aab 包上传到 fir` --> `测试人员通过工具软件进行安装`([软件地址](https://github.com/fireantzhang/AabInstallHelp)) --> `打包关闭切换环境入口的 aab 包` --> `验证无误之后即可从 fir 上下载 aab 包进行提交` 
 
-#####`fir-cli` 的支持更新内容如下：
 
+#### fir-cli 的支持更新内容如下：
 ```
 (2.0.2) 有限支持 aab 文件上传, 强依赖 bundletool 工具, 具体请参见参数 --bundletool_jar_path 和 --auto_download_bundletool_jar
 ```
 
-##### aab 安装辅助安装软件运行示意：
+#### aab 安装辅助安装软件运行示意：
 
-[image](/image/aab_install_soft.gif)
+![image](image/aab_install_soft.gif)
 
 ### 最近更新
 
