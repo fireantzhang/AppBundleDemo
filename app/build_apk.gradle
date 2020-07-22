@@ -1,0 +1,150 @@
+/**
+ * 打包 apk 测试包，有环境切换入口，以及各种测试入口逻辑
+ */
+task buildApkAlpha(dependsOn: ['assembleAlphaRelease']) {
+
+    doLast {
+        this.findApkAndCopy()
+    }
+}
+
+/**
+ * 打包 apk 正式包，无环境切换入口
+ */
+task buildApkRelease(dependsOn: ['assembleRelease']) {
+
+    doLast {
+        this.findApkAndCopy()
+    }
+}
+
+/**
+ * 查找打包输出的 apk 文件，并将其拷贝到项目根目录的 PackageOutTemp 文件夹下
+ *
+ */
+def findApkAndCopy() {
+
+    // 1. 获取 apk 打包输出文件夹
+    def apkOutPutDir = new File("${buildFile.getParent()}/build/outputs/apk")
+
+    echoInfo("打包出包目录：$apkOutPutDir")
+
+    if (!apkOutPutDir.exists()) {
+        throwError("打包出包目录不存在")
+        return
+    }
+
+    // 2. 查找目标文件夹下的 apk 文件
+    def targetApkList = findApkWithDir(apkOutPutDir)
+
+    // 3. 拷贝 apk 文件到目标文件夹
+    copyApkToDir(targetApkList)
+}
+
+/**
+ * 拷贝 apk 文件到项目根目录下的 buildOutTemp 文件夹
+ *
+ * @param apkFileList
+ */
+def copyApkToDir(List<File> apkFileList) {
+
+    if (apkFileList == null || apkFileList.isEmpty()) {
+        throwError("没有找到需要 copy 的 apk 文件")
+        return
+    }
+
+    int apkFileSize = apkFileList.size()
+
+    if (apkFileSize > 1) {
+
+        StringBuilder strB = new StringBuilder("构建文件夹下 apk 文件找到 ${apkFileSize} 个，请检查是否有问题：\n")
+
+        apkFileList.eachWithIndex { File entry, int index ->
+            strB.append("${index + 1}、${entry.getAbsolutePath()}; \n")
+        }
+
+        throwError(strB.toString())
+        return
+    }
+
+    def targetApkFile = apkFileList.get(0)
+
+    echoInfo("需要拷贝的安装包文件：${targetApkFile}")
+
+    def outTempDir = new File("${rootProject.getProjectDir().getAbsolutePath()}/PackageOutTemp/")
+    def outApkFileName = getFinalOutPackageName()
+
+    // 如果文件夹存在，则先删除
+    outTempDir.deleteDir()
+
+    copy {
+        from targetApkFile.getAbsolutePath()
+        into outTempDir.getAbsolutePath()
+
+        rename {
+            outApkFileName.replace("*.apk", outApkFileName)
+        }
+    }
+
+    def copyApkFilePath = new File("${outTempDir.getAbsolutePath()}/${outApkFileName}")
+
+    if (!copyApkFilePath.exists()) {
+        throwError("apk 文件拷贝失败，请检查原因！")
+        return
+    }
+
+    echoInfo("apk 文件拷贝成功：${copyApkFilePath}")
+}
+
+/**
+ * 获取最终输出的安装包的文件名
+ *
+ * @return
+ */
+def getFinalOutPackageName() {
+
+    def versionInfo = "${android.defaultConfig.versionName}_${android.defaultConfig.versionCode}"
+
+    return "app_${versionInfo}_${currentTime()}_release.apk"
+}
+
+/**
+ * 获取目标文件夹下的 apk 文件，会递归遍历目标文件夹下的所有子文件夹
+ *
+ * @param targetDir 目标文件夹夹
+ * @return
+ */
+def findApkWithDir(File targetDir) {
+
+    List<File> apkFileList = []
+
+    targetDir.listFiles().each {
+
+        if (it.isDirectory()) {
+
+            def childDirApkList = findApkWithDir(it)
+
+            if (childDirApkList != null && !childDirApkList.isEmpty()) {
+                apkFileList.addAll(childDirApkList)
+            }
+
+        } else if (it.getName().endsWith('.apk')) {
+
+            apkFileList.add(it)
+        }
+    }
+
+    return apkFileList
+}
+
+static def currentTime() {
+    return new Date().format("yyyyMMdd_HHmm")
+}
+
+def throwError(String content) {
+    throw new RuntimeException("[apk 包拷贝处理异常]：${content}")
+}
+
+def echoInfo(String content) {
+    println("[apk 包拷贝处理]：$content")
+}

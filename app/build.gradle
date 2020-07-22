@@ -4,31 +4,46 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
-apply from: 'build_google_play_aab.gradle'
+apply from: 'build_aab.gradle'
+apply from: 'build_apk.gradle'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+
     defaultConfig {
         applicationId "com.fireantzhang.aabdemo"
-        minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 3
+        versionName "1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // 作用于引入的第三方库，是否只引入第三方库中指定的语言包(第三方库比如： AppCompat 或 Google Play 服务)
         resConfigs "en", "zh-rCN", "zh-rTW", "vi", "th"
     }
 
+    packagingOptions {
+        exclude 'META-INF/services/com.fasterxml.jackson.core.ObjectCodec'
+        exclude 'META-INF/services/com.fasterxml.jackson.core.JsonFactory'
+        exclude 'META-INF/beans.xml'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'debug.keystore'
+    }
+
     /**
-     * 通过这个节点可以配置 AppBundle 的分割配置项，主要包含三种配置项：language、density、abi，
+     * 通过这个节点可以配置 AppBundle 的分割配置项，主要包含三种配置项：language、density、abi
      *
      * 默认值都是为 true，所以如果需要分割，则可以不配置
      */
     bundle {
         // 是否分割多语言包
         language {
-            enableSplit = false
+            enableSplit = true
         }
 
         // 是否分割资源
@@ -67,12 +82,12 @@ android {
         }
 
         // 开发测试阶段，提供给测试同事测试的打包方式
-        internalRelase {
+        alphaRelease {
             buildConfigField "boolean", "IS_TEST_VERSION", "true"
 
             signingConfig signingConfigs.release
 
-
+            matchingFallbacks = ['debug']
         }
 
         // 发布到应用商店的正式包打包方式
@@ -80,25 +95,28 @@ android {
             buildConfigField "boolean", "IS_TEST_VERSION", "false"
 
             signingConfig signingConfigs.release
+
+            matchingFallbacks = ['debug']
         }
     }
+    // 动态模块声明
+    dynamicFeatures = [":game"]
 }
 
 dependencies {
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'androidx.core:core-ktx:1.0.2'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+    // 使用 api 关键字，引入的库会与关联的 module 共享
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
+    api "com.google.android.play:core:${versions.playcore}"
+
+    api "androidx.appcompat:appcompat:${versions.appcompat}"
+    api "com.google.android.material:material:${versions.material}"
+    api "androidx.core:core-ktx:${versions.ktx}"
+    api "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-}
-
-task buildGooglePlayAAB(dependsOn: ['bundleRelease']) {
-
-    doLast {
-        findAabAndCopy()
-    }
 }

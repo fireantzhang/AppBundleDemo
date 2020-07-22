@@ -1,0 +1,202 @@
+/**
+ * 构建 aab 格式内部测试包，含环境入口切换，完成后会拷贝到根目录下的 buildOutTemp 文件夹中
+ */
+task buildAabAlpha(dependsOn: ['bundleAlphaRelease']) {
+
+    doLast {
+
+        this.findAabAndCopy()
+    }
+}
+
+/**
+ * 构建 aab 格式生产环境包，不含测试入口，完成后会拷贝到根目录下的 buildOutTemp 文件夹中
+ */
+task buildAabRelease(dependsOn: ['bundleRelease']) {
+
+    doLast {
+
+        this.findAabAndCopy()
+    }
+}
+
+/**
+ * 查找打包输出的 aab 文件，并拷贝到项目根目录下的 buildOutTemp 文件夹
+ *
+ * @return
+ */
+def findAabAndCopy() {
+
+    // 1. 获取 aab 文件输出文件夹
+    def bundleOutPutDir = new File("${buildFile.getParent()}/build/outputs/bundle")
+
+    printlnInfo("打包出包目录：$bundleOutPutDir")
+
+    if (!bundleOutPutDir.exists()) {
+        printlnInfo("打包出包目录不存在")
+        return
+    }
+
+    // 2. 查找文件夹下的 aab 安装包
+    List<File> aabFileList = findAabWithDir(bundleOutPutDir)
+
+    // 3. 拷贝 aab 文件到目标文件夹
+    copyAabToDir(aabFileList)
+}
+
+/**
+ * 拷贝 aab 文件到目标文件夹
+ *
+ * @param aabFileList
+ */
+def copyAabToDir(List<File> aabFileList) {
+
+    if (aabFileList == null || aabFileList.isEmpty()) {
+        printlnInfo("没有找到需要拷贝的 aab 安装包")
+        return
+    }
+
+    String needCopyAabFileName = getGuardAabFileName()
+
+    File sourceAabFile = null
+
+    aabFileList.each {
+
+        if (it.getName().endsWith(needCopyAabFileName)) {
+            sourceAabFile = it
+            return
+        }
+    }
+
+    if (sourceAabFile == null) {
+        return
+    }
+
+    printlnInfo("需要拷贝的安装包文件：${sourceAabFile}")
+
+    def outTempDir = new File("${rootProject.getProjectDir().getAbsolutePath()}/PackageOutTemp/")
+    def outAabFileName = getFinalOutPackageName()
+
+    // 如果文件夹存在，则先删除
+    outTempDir.deleteDir()
+
+    copy {
+        from sourceAabFile.getAbsolutePath()
+        into outTempDir.getAbsolutePath()
+
+        rename {
+            outAabFileName.replace("*.aab", outAabFileName)
+        }
+    }
+
+    def copyAabFilePath = new File("${outTempDir.getAbsolutePath()}/${outAabFileName}")
+
+    if (!copyAabFilePath.exists()) {
+        throwError("aab 文件拷贝失败，请检查原因！")
+        return
+    }
+
+    printlnInfo("aab 文件拷贝成功：${copyAabFilePath}")
+}
+
+/**
+ * 获取最终输出的安装包的文件名
+ *
+ * @return
+ */
+def getFinalOutPackageName() {
+
+    def versionInfo = "${android.defaultConfig.versionName}_${android.defaultConfig.versionCode}"
+
+    return "app_${versionInfo}_${currentTime()}_release.aab"
+}
+
+/**
+ * 获取指定文件夹下的 aab 安装包文件，包含子文件夹
+ *
+ * @param targetDir
+ */
+def findAabWithDir(File targetDir) {
+
+    List<File> aabFileList = []
+
+    targetDir.listFiles().each {
+
+        if (it.isDirectory()) {
+
+            List<File> childAabFileList = findAabWithDir(it)
+            if (childAabFileList != null && !childAabFileList.isEmpty()) {
+                aabFileList.addAll(childAabFileList)
+            }
+
+        } else if(it.getName().endsWith('.aab')) {
+
+            aabFileList.add(it)
+        }
+    }
+
+    return aabFileList
+}
+
+def currentTime() {
+    return new Date().format("yyyyMMdd_HHmm")
+}
+
+def getGuardAabFileName() {
+
+    if (isEnableAabResGuardPlugin()) {
+        return "duplicated-app.aab"
+    }
+    return "aab"
+}
+
+// 判断是否开启 aab 资源混淆插件，开关在根项目的 gradle.properties 中配置
+def isEnableAabResGuardPlugin() {
+
+    def mapPros = rootProject.getProperties()
+    if (mapPros == null || mapPros.size() == 0) {
+        return false
+    }
+    def key = "enableAabResGuardPlugin"
+
+    return mapPros.containsKey(key) && mapPros.get(key) == "true"
+}
+
+if (!isEnableAabResGuardPlugin()) {
+    printlnInfo("目前没有开启 aab 资源混淆插件")
+    return
+}
+
+printlnInfo("目前已经开启 aab 资源混淆插件")
+
+def throwError(String content) {
+    throw new RuntimeException("[abb 包拷贝处理异常]：${content}")
+}
+
+def printlnInfo(Object value) {
+    println("[abb 包拷贝处理]：$value")
+}
+
+// 引入字节跳动的 aab 资源混淆插件
+apply plugin: "com.bytedance.android.aabResGuard"
+aabResGuard {
+    //mappingFile = file("mapping.txt").toPath() // 用于增量混淆的 mapping 文件
+    /**
+     * 白名单列表
+     *  1、Google 相关的配置字符串；
+     *  2、私聊页面，表情面板相关的资源
+     */
+    whiteList = [
+            "*.R.raw.*",
+            "*.R.drawable.icon"
+    ]
+    obfuscatedBundleFileName = getGuardAabFileName() // 混淆后的文件名称，必须以 `.aab` 结尾
+    mergeDuplicatedRes = true // 是否允许去除重复资源
+    enableFilterFiles = true // 是否允许过滤文件
+    filterList = [ // 文件过滤规则
+                   "META-INF/*"
+    ]
+    enableFilterStrings = false // 过滤文案
+    unusedStringPath = file("unused.txt").toPath() // 过滤文案列表路径 默认在mapping同目录查找
+    languageWhiteList = ["en", "ar", "de", "es", "fr", "in", "ja", "ko", "ms", "pt", "ru", "th", "tr", "vi", "zh-rCN", "zh-rTW","hi"] // 保留en,en-xx,zh,zh-xx等语言，其余均删除
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="switch_env_title">切换测试环境</string>
+    <string name="get_install_modules">获取已经安装的模块</string>
+    <string name="start_game_feature">启动游戏动态模块</string>
+    <string name="feature_module_loading">动态模块加载中…</string>
+
+</resources>

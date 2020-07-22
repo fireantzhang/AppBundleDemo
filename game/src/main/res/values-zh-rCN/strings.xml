@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="string_game_content">这是一个动态下载的游戏模块</string>
+    <string name="game_room_title">游戏房间</string>
+
+</resources>

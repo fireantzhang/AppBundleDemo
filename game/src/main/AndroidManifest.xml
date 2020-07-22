@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution"
+    package="com.fireantzhang.game">
+
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_game">
+        <dist:delivery>
+            <dist:on-demand />
+        </dist:delivery>
+
+        <dist:fusing dist:include="true" />
+    </dist:module>
+
+    <application android:hasCode="false">
+        <activity
+            android:name=".GameFeatureActivity" />
+    </application>
+
+</manifest>
