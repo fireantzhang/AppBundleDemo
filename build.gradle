@@ -4,27 +4,30 @@ buildscript {
 
     ext.versions = [
             'playcore'          : '1.7.3',
-            'kotlin'            : '1.3.72',
-            'compileSdk'        : 29,
+            'kotlin'            : '1.7.10',
+            'compileSdk'        : 31,
             'minSdk'            : 19,
-            'targetSdk'         : 29,
-            'buildTools'        : '29.0.2',
+            'targetSdk'         : 31,
+            'buildTools'        : '31.0.0',
             'appcompat'         : '1.1.0',
             'material'          : '1.1.0',
             'ktx'               : '1.3.0',
             'constraintlayout'  : '1.1.3',
-            'aabresguard'       : '0.1.6'
+            'aabresguard'       : '0.1.10'
     ]
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
 
+        maven {
+            url 'https://raw.githubusercontent.com/martinloren/AabResGuard/mvn-repo' // aabResGuard 适配 AGP 7.x 问题
+        }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.3'
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath "com.bytedance.android:aabresguard-plugin:${versions.aabresguard}"
+        classpath "com.bytedance.android:aabresguard-plugin:0.1.10"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -33,8 +36,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
-
+        mavenCentral()
     }
 }
 

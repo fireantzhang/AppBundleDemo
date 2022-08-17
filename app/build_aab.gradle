@@ -169,7 +169,7 @@ if (!isEnableAabResGuardPlugin()) {
 
 printlnInfo("目前已经开启 aab 资源混淆插件")
 
-def throwError(String content) {
+static def throwError(String content) {
     throw new RuntimeException("[abb 包拷贝处理异常]：${content}")
 }
 
