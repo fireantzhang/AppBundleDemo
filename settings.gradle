@@ -1,2 +1,3 @@
 include ':app', ':game'
 rootProject.name='AppBundleDemo'
+include ':bigResource'

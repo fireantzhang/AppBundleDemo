@@ -6,5 +6,6 @@
     <string name="start_game_feature">启动游戏动态模块</string>
     <string name="feature_module_loading">动态模块加载中…</string>
     <string name="get_app_files">获取 app 的 files 文件夹内容</string>
+    <string name="title_bigresource">BigResource</string>
 
 </resources>
